@@ -26,3 +26,17 @@ It auto-reads incoming emails, classifies them (Sales, Support, Spam, etc.), and
 
 ## 📥 Sample Prompt (Gemini)
 
+---
+
+## 👤 Built By
+
+**Krrish Gupta**  
+> Passionate about automation, AI, and building tools that work while you sleep ☁️
+
+---
+
+## 📬 Contact
+
+For freelance automation projects or collaboration:  
+📧 `krrishg1604@gmail.com`
+
