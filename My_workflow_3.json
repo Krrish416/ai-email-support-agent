@@ -1,0 +1,145 @@
+{
+  "name": "My workflow 3",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "af376414-69df-441e-965d-0dbe966ba954",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fNd1YZIixOglMIT0",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=AIzaSyBco4O97i9FKezF-40qUMICt735zwQmIEI",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "JSON (application/json)",
+        "body": "={\n  \"contents\": [\n    {\n      \"parts\": [\n        {\n          \"text\": \"You are an AI email support assistant working for a real business.\\n\\nHere is a new customer email:\\n\\nFrom: {{ $json.From }}\\nSubject: {{ $json.Subject }}\\nBody: {{ $json.snippet }}\\n\\nPlease:\\n1. Summarize the email in 1–2 lines\\n2. Categorize it as: Support, Sales, Complaint, Spam, or Other\\n3. Write a polite and natural email reply in a human tone. Avoid sounding like a chatbot.\\n\\nFormat your response like this:\\n\\n**Summary:** [text]\\n**Category:** [Support / Sales / etc.]\\n**Suggested Reply:** [email body]\"\n        }\n      ]\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        0
+      ],
+      "id": "921bb77b-671a-47e4-9ec0-cccd978d040f",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "return items.map(item => {\n  const fullText = item.json[\"candidates\"][0][\"content\"][\"parts\"][0][\"text\"];\n\n  // Extract Summary\n  const summaryMatch = fullText.match(/\\*\\*Summary:\\*\\*\\s*(.*)/);\n  const summary = summaryMatch ? summaryMatch[1].trim() : \"Not found\";\n\n  // Extract Category\n  const categoryMatch = fullText.match(/\\*\\*Category:\\*\\*\\s*(.*)/);\n  const category = categoryMatch ? categoryMatch[1].trim() : \"Unknown\";\n\n  // Extract Suggested Reply\n  const replyMatch = fullText.match(/\\*\\*Suggested Reply:\\*\\*\\s*([\\s\\S]*)/);\n  const reply = replyMatch ? replyMatch[1].trim() : \"No reply found\";\n\n  return {\n    json: {\n      summary,\n      category,\n      ai_reply: reply\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "id": "778d0e65-1358-4af8-afbb-68519f77ffbb",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Gmail Trigger').item.json.From }}",
+        "subject": "=RE: {{ $('Gmail Trigger').item.json.Subject }}",
+        "emailType": "text",
+        "message": "={{ $json.ai_reply }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        660,
+        0
+      ],
+      "id": "d01b8a19-10b5-482f-ab7d-4a0badae5a31",
+      "name": "Gmail",
+      "webhookId": "f6027379-95fc-43ad-bcda-a7206c4d70dc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "fNd1YZIixOglMIT0",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c409872f-36b2-4609-9403-a4d1af76598e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2dc4900e0a3b680d5262b0295852ccd117ba06f11904d6fd9a0fdf34655c4c80"
+  },
+  "id": "ig5Z2uD0blrsr1ZM",
+  "tags": []
+}
